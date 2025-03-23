@@ -1,30 +1,35 @@
 import { Schema, model } from "mongoose";
 import { genSalt, hash } from "bcryptjs";
 
-const userSchema = new Schema({
-  username: {
-    type: String,
-    required: true,
-    unique: true,
-    minlength: 3,
-    maxlength: 20,
+const userSchema = new Schema(
+  {
+    username: {
+      type: String,
+      required: true,
+      unique: true,
+      minlength: 3,
+      maxlength: 20,
+    },
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+    },
+    password: {
+      type: String,
+      required: true,
+      minlength: 6,
+      maxlength: 20,
+    },
+    profileImage: {
+      type: String,
+      default: "",
+    },
   },
-  email: {
-    type: String,
-    required: true,
-    unique: true,
+  {
+    timestamps: true,
   },
-  password: {
-    type: String,
-    required: true,
-    minlength: 6,
-    maxlength: 20,
-  },
-  profileImage: {
-    type: String,
-    default: "",
-  },
-});
+);
 
 userSchema.pre("save", async function (next) {
   if (!this.isModified("password")) return next();
