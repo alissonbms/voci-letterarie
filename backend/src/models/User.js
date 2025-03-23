@@ -1,5 +1,5 @@
 import { Schema, model } from "mongoose";
-import { genSalt, hash } from "bcryptjs";
+import { genSalt, hash, compare } from "bcryptjs";
 
 const userSchema = new Schema(
   {
@@ -39,6 +39,10 @@ userSchema.pre("save", async function (next) {
 
   next();
 });
+
+userSchema.methods.comparePassword = async function (userPassword) {
+  return await compare(userPassword, this.password);
+};
 
 const User = model("User", userSchema);
 
