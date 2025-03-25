@@ -87,4 +87,60 @@ router.post("/", protectRoute, async (req, res) => {
   }
 });
 
+router.patch("/:id", protectRoute, async (req, res) => {
+  try {
+    const review = await Review.findById(req.params.id);
+
+    if (!review) {
+      return res.status(400).json({ message: "Review not found." });
+    }
+
+    if (review.user.toString() !== req.user._id.toString()) {
+      return res.status(401).json({
+        message: "You are not authorized, access denied.",
+      });
+    }
+
+    const { title, bookTitle, rating, image, caption } = req.body;
+
+    if (image) {
+      const oldImage = review.image;
+      const result = await deleteImageFromCloudinary(oldImage);
+
+      if (result.value === false) {
+        return res.status(400).json({ message: result.message });
+      }
+
+      const uploadResponse = await cloudinary.uploader.upload(image, {
+        folder: "voci-letterarie/reviews",
+        unique_filename: true,
+      });
+
+      const imageUrl = uploadResponse.secure_url;
+
+      await review.updateOne({
+        title: title,
+        bookTitle: bookTitle,
+        rating: rating,
+        image: imageUrl,
+        caption: caption,
+      });
+
+      return res.status(201).json({ message: "Review updated successfully." });
+    }
+
+    await review.updateOne({
+      title: title,
+      bookTitle: bookTitle,
+      rating: rating,
+      caption: caption,
+    });
+
+    return res.status(201).json({ message: "Review updated successfully." });
+  } catch (error) {
+    console.log("Error when uptading a review: ", error);
+    return res.status(500).json({ message: "Internal server error." });
+  }
+});
+
 export default router;
