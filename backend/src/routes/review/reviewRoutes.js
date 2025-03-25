@@ -2,6 +2,8 @@ import express from "express";
 import Review from "../../models/Review.js";
 import protectRoute from "../../middlewares/auth/auth.middleware.js";
 import searchQuery from "../../utils/search/query.js";
+import cloudinary from "../../lib/upload/cloudinary.js";
+import { deleteImageFromCloudinary } from "../../utils/upload/delete-image-cloudinary.js";
 
 const router = express.Router();
 
@@ -154,6 +156,20 @@ router.delete("/:id", protectRoute, async (req, res) => {
     if (review.user.toString() !== req.user._id.toString()) {
       return res.status(401).json({
         message: "You are not authorized, access denied.",
+      });
+    }
+
+    if (review.image && review.image.includes("cloudinary")) {
+      const result = await deleteImageFromCloudinary(review.image);
+
+      if (result.value === false) {
+        return res.status(400).json({ message: result.message });
+      }
+
+      await review.deleteOne();
+
+      return res.status(200).json({
+        message: `Review - '${review.title}', by ${req.user.username} was deleted successfully`,
       });
     }
 
