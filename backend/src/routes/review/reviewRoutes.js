@@ -47,6 +47,25 @@ router.get("/", protectRoute, async (req, res) => {
   }
 });
 
+router.get("/user", protectRoute, async (req, res) => {
+  try {
+    const reviews = await Review.find({
+      user: req.user._id,
+    }).sort({ createdAt: -1 });
+
+    if (reviews.length === 0) {
+      return res
+        .status(200)
+        .json({ message: "None or no more reviews to see :)" });
+    }
+
+    return res.status(200).json(reviews);
+  } catch (error) {
+    console.log(`Error when fetching ${req.user.username} reviews: `, error);
+    return res.status(500).json({ message: "Internal server error." });
+  }
+});
+
 router.post("/", protectRoute, async (req, res) => {
   try {
     const { title, bookTitle, rating, image, caption } = req.body;
