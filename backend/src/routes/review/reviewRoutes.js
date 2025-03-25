@@ -143,4 +143,29 @@ router.patch("/:id", protectRoute, async (req, res) => {
   }
 });
 
+router.delete("/:id", protectRoute, async (req, res) => {
+  try {
+    const review = await Review.findById(req.params.id);
+
+    if (!review) {
+      return res.status(400).json({ message: "Review not found." });
+    }
+
+    if (review.user.toString() !== req.user._id.toString()) {
+      return res.status(401).json({
+        message: "You are not authorized, access denied.",
+      });
+    }
+
+    await review.deleteOne();
+
+    return res.status(200).json({
+      message: `Review - '${review.title}', by ${req.user.username} was deleted successfully`,
+    });
+  } catch (error) {
+    console.log("Error when deleting a review: ", error);
+    return res.status(500).json({ message: "Internal server error." });
+  }
+});
+
 export default router;
